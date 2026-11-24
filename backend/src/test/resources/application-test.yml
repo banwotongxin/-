@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:campus_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      schema-locations: classpath:schema.sql
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+
+app:
+  jwt:
+    secret: cqu-campus-activity-system-test-secret-key-2026
+    expire-seconds: 7200
+  file:
+    root: ./target/test-uploads
+    max-size-mb: 20
+  cors:
+    allowed-origins: http://localhost:5173
+
+logging:
+  level:
+    com.cqu.campus: warn

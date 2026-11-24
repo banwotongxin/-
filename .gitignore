@@ -1,0 +1,39 @@
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+
+# 上传文件与本地数据库
+backend/uploads/
+uploads/
+*.db
+*.mv.db
+*.trace.db
+data/
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cqu.campus.mapper.StatisticsMapper">
+
+    <sql id="clubFilter">
+        <choose>
+            <when test="allClubs == true">
+            </when>
+            <when test="clubIds != null and clubIds.size() > 0">
+                AND a.club_id IN
+                <foreach collection="clubIds" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </when>
+            <otherwise>
+                AND 1 = 0
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="aggregateActivityByStatus" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT a.status AS status, COUNT(*) AS activity_count
+        FROM activities a
+        WHERE a.created_at <![CDATA[ >= ]]> #{from} AND a.created_at <![CDATA[ <= ]]> #{to}
+        <include refid="clubFilter"/>
+        GROUP BY a.status
+    </select>
+
+    <select id="aggregateSignupTotals" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT COUNT(*) AS signup_count,
+               COUNT(DISTINCT s.student_id) AS distinct_student_count,
+               SUM(CASE WHEN s.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count
+        FROM signups s
+        JOIN activities a ON a.id = s.activity_id
+        WHERE s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status <![CDATA[ <> ]]> 'CANCELLED'
+        <include refid="clubFilter"/>
+    </select>
+
+    <select id="aggregateSigninTotals" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT COUNT(*) AS checkin_count,
+               SUM(CASE WHEN si.source = 'NORMAL' THEN 1 ELSE 0 END) AS normal_checkin_count,
+               SUM(CASE WHEN si.source IS NULL OR si.source <![CDATA[ <> ]]> 'NORMAL' THEN 1 ELSE 0 END) AS supplement_checkin_count
+        FROM signins si
+        JOIN signups s ON s.id = si.signup_id
+        JOIN activities a ON a.id = s.activity_id
+        WHERE si.created_at <![CDATA[ >= ]]> #{from} AND si.created_at <![CDATA[ <= ]]> #{to}
+          AND s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status = 'APPROVED'
+        <include refid="clubFilter"/>
+    </select>
+
+    <select id="aggregateActivityByClub" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT a.club_id AS club_id, COUNT(*) AS activity_count
+        FROM activities a
+        WHERE a.created_at <![CDATA[ >= ]]> #{from} AND a.created_at <![CDATA[ <= ]]> #{to}
+        <include refid="clubFilter"/>
+        GROUP BY a.club_id
+    </select>
+
+    <select id="aggregateSignupByClub" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT a.club_id AS club_id,
+               COUNT(*) AS signup_count,
+               SUM(CASE WHEN s.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count
+        FROM signups s
+        JOIN activities a ON a.id = s.activity_id
+        WHERE s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status <![CDATA[ <> ]]> 'CANCELLED'
+        <include refid="clubFilter"/>
+        GROUP BY a.club_id
+    </select>
+
+    <select id="aggregateSigninByClub" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT a.club_id AS club_id, COUNT(*) AS checkin_count
+        FROM signins si
+        JOIN signups s ON s.id = si.signup_id
+        JOIN activities a ON a.id = s.activity_id
+        WHERE si.created_at <![CDATA[ >= ]]> #{from} AND si.created_at <![CDATA[ <= ]]> #{to}
+          AND s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status = 'APPROVED'
+        <include refid="clubFilter"/>
+        GROUP BY a.club_id
+    </select>
+
+    <select id="trendActivity" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT CAST(a.created_at AS DATE) AS stat_date, COUNT(*) AS activity_count
+        FROM activities a
+        WHERE a.created_at <![CDATA[ >= ]]> #{from} AND a.created_at <![CDATA[ <= ]]> #{to}
+        <include refid="clubFilter"/>
+        GROUP BY CAST(a.created_at AS DATE)
+        ORDER BY stat_date
+    </select>
+
+    <select id="trendSignup" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT CAST(s.created_at AS DATE) AS stat_date,
+               COUNT(*) AS signup_count,
+               SUM(CASE WHEN s.status = 'APPROVED' THEN 1 ELSE 0 END) AS approved_count
+        FROM signups s
+        JOIN activities a ON a.id = s.activity_id
+        WHERE s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status <![CDATA[ <> ]]> 'CANCELLED'
+        <include refid="clubFilter"/>
+        GROUP BY CAST(s.created_at AS DATE)
+        ORDER BY stat_date
+    </select>
+
+    <select id="trendSignin" resultType="com.cqu.campus.domain.vo.StatisticsAggregateRow">
+        SELECT CAST(si.created_at AS DATE) AS stat_date, COUNT(*) AS checkin_count
+        FROM signins si
+        JOIN signups s ON s.id = si.signup_id
+        JOIN activities a ON a.id = s.activity_id
+        WHERE si.created_at <![CDATA[ >= ]]> #{from} AND si.created_at <![CDATA[ <= ]]> #{to}
+          AND s.created_at <![CDATA[ >= ]]> #{from} AND s.created_at <![CDATA[ <= ]]> #{to}
+          AND s.status = 'APPROVED'
+        <include refid="clubFilter"/>
+        GROUP BY CAST(si.created_at AS DATE)
+        ORDER BY stat_date
+    </select>
+
+</mapper>

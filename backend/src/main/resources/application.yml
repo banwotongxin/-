@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: mysql
+  application:
+    name: campus-activity
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+  datasource:
+    url: jdbc:mysql://localhost:3306/campus?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ${DB_PASSWORD:}
+  sql:
+    init:
+      mode: never
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+
+app:
+  jwt:
+    # 签名密钥，生产环境必须通过环境变量 JWT_SECRET 覆盖（长度 >= 32）
+    secret: ${JWT_SECRET:cqu-campus-activity-system-demo-secret-key-2026}
+    expire-seconds: 7200
+  file:
+    root: ./uploads
+    max-size-mb: 20
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+
+logging:
+  level:
+    com.cqu.campus: info
